@@ -1,0 +1,40 @@
+{% extends "layout.html" %}
+{% block title %}
+Cheesy Stick Tracker
+{% endblock %}
+
+{% block body %}
+<h1>Hello {{ session["username"] }}!</h1>
+<img src="{{ session['profile_picture'] }}" class="profile_picture">
+<h2>Actions</h2>
+  <ul>
+    <li>
+      <a href="{{ url_for('logout') }}">Logout</a>
+    </li>
+    <li>
+      <a href="{{ url_for('edit_user', username=session['username']) }}">Edit Account</a>
+    </li>
+    <li>
+      <a href="{{ url_for('create_event') }}">Add cheesy stick events</a>
+    </li>
+  </ul>
+
+<h2>Cheesy Stick Events</h2>
+  <table>
+    <tr>
+      <th>Date</th>
+      <th>Paid for by?</th>
+      <th>Joke</th>
+      <th>Picture</th>
+    </tr>
+    {% for event in ten_most_recent_events %}
+      <td>{{event["date"]}}</td>
+      <td>{{event["paid_for_by"]}}</td>
+      <td>{{event["joke"]}}</td>
+      <td>
+	<img src="{{ url_for('get_event_picture', id=event['id']) }}">
+      </td>
+    {% endfor %}
+    </tr>  
+  </table>
+{% endblock %}

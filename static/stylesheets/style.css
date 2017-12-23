@@ -1,0 +1,11 @@
+.profile_picture {
+    width: 100px;
+}
+
+table {
+    width: 80%;
+}
+
+td, th {
+    border: 1px solid black;
+}
