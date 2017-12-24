@@ -10,11 +10,11 @@ dynamodb = boto3.resource("dynamodb", region_name="us-west-1")
 class User:
     db = dynamodb.Table("CheesyStickUsers")
     
-    def __init__(self, username, password_hash="", salt="", profile_picture=""):
+    def __init__(self, username, password_hash="", salt="", phone_number=""):
         self.username = username
         self.password_hash = password_hash
         self.salt = salt
-        self.profile_picture = profile_picture
+        self.phone_number = phone_number
 
     def save(self):
         # save to the database
@@ -22,11 +22,11 @@ class User:
             Key={
                 "username": self.username
             },
-            UpdateExpression="set password_hash = :ph, salt = :s, profile_picture = :pp",
+            UpdateExpression="set password_hash = :ph, salt = :s, phone_number = :pn",
             ExpressionAttributeValues={
                 ":ph": self.password_hash,
                 ":s": self.salt,
-                ":pp": self.profile_picture
+                ":pn": self.phone_number
             },
             ReturnValues="UPDATED_NEW"
         )
@@ -45,8 +45,7 @@ class User:
         )
         return User(username,
                     password_hash=password_hash_and_salt[0],
-                    salt=password_hash_and_salt[1],
-                    profile_picture="")
+                    salt=password_hash_and_salt[1])
 
     def by_username(username):
         # get from the database and return a User object
@@ -60,13 +59,9 @@ class User:
             print(e.response['Error']['Message'])
         else:
             user = response["Item"]
-            try:
-                return User(user["username"],
-                            password_hash=user["password_hash"],
-                            salt=user["salt"],
-                            profile_picture=user["profile_picture"])
-            except:
-                return User(user["username"],
-                            password_hash=user["password_hash"],
-                            salt=user["salt"],
-                            profile_picture="")
+            if "phone_number" not in user:
+                user["phone_number"] = ""
+            return User(user["username"],
+                        password_hash=user["password_hash"],
+                        salt=user["salt"],
+                        phone_number=user["phone_number"])

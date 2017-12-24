@@ -1,6 +1,8 @@
-from flask import Flask, render_template, session, url_for, request, redirect, flash
+from flask import Flask, render_template, session, url_for, request, redirect, flash, send_file
 from models import User
 import trackerutils
+import boto3
+import io
 
 app = Flask(__name__)
 app.secret_key = "fdajfdjajfdkjflsdkjakdsjflajdslk"
@@ -29,7 +31,7 @@ def login():
             flash("Incorrect password", "error")
             return redirect(url_for("login"))
         session["username"] = user.username
-        session["profile_picture"] = user.profile_picture or url_for("static", filename="images/unknown_profile_picture.png")
+        session["phone_number"] = user.phone_number
         flash("Successfully logged in!", "success")
         return redirect(url_for("index"))
 
@@ -41,7 +43,27 @@ def logout():
 
 @app.route("/users/<username>/edit", methods=['GET', 'POST'])
 def edit_user(username):
-    return
+    if username != session["username"]:
+        flash("You can't edit someone else's account!", "error")
+        return redirect(url_for("index"))
+    if request.method == "GET":
+        return render_template("edit_user.html", phone_number=session["phone_number"])
+    elif request.method == "POST":
+        data = request.form
+        user = User.by_username(session["username"])
+        user.phone_number = data["phone"]
+        user.save()
+        session["phone_number"] = user.phone_number
+
+        profile_picture = request.files["profile_picture"]
+        if profile_picture:
+            # TODO upload to S3
+            s3 = boto3.resource("s3", region_name="us-west-1")
+            bucket = s3.Bucket("cheesy-stick-tracker-images")
+            bucket.put_object(Key="profile_pictures/profile-" + username + ".jpeg", Body=profile_picture)
+            
+        flash("Successfully updated!", "success")
+        return redirect(url_for("edit_user", username=session["username"]))
 
 @app.route("/users/create", methods=["GET", "POST"])
 def create_user():
@@ -57,10 +79,9 @@ def create_user():
         confirm_password = data["confirm_password"]
         if password != confirm_password:
             flash("Password and confirmation do not match", "error")
-            return redirect(url_for("create_user"))
+            return redirect(url_for("create_user", username=session["username"]))
         user = User.create(username, password)
         session["username"] = user.username
-        session["profile_picture"] = user.profile_picture or url_for("static", filename="images/unknown_profile_picture.png")
         flash("Account created!", "success")
         return redirect(url_for("index"))
 
@@ -71,3 +92,13 @@ def create_event():
 @app.route("/events/<id>/picture", methods=["GET"])
 def get_event_picture(id):
     return
+
+@app.route("/users/<username>/profile_picture", methods=["GET"])
+def get_profile_picture(username):
+    s3 = boto3.resource("s3", region_name="us-west-1")
+    bucket = s3.Bucket("cheesy-stick-tracker-images")
+    object = bucket.Object("profile_pictures/profile-" + username + ".jpeg")
+    file_stream = io.BytesIO()
+    object.download_fileobj(file_stream)
+    file_stream.seek(0)
+    return send_file(file_stream, mimetype="image/jpg", cache_timeout=0)

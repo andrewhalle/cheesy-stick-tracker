@@ -5,17 +5,17 @@ Cheesy Stick Tracker
 
 {% block body %}
 <h1>Hello {{ session["username"] }}!</h1>
-<img src="{{ session['profile_picture'] }}" class="profile_picture">
+<img src="{{ url_for('get_profile_picture', username=session['username']) }}" class="profile_picture">
 <h2>Actions</h2>
   <ul>
     <li>
       <a href="{{ url_for('logout') }}">Logout</a>
     </li>
     <li>
-      <a href="{{ url_for('edit_user', username=session['username']) }}">Edit Account</a>
+      <a href="{{ url_for('edit_user', username=session['username']) }}">My Account</a>
     </li>
     <li>
-      <a href="{{ url_for('create_event') }}">Add cheesy stick events</a>
+      <a href="{{ url_for('create_event') }}">Get Cheesy Sticks</a>
     </li>
   </ul>
 
