@@ -1,0 +1,17 @@
+{% extends "layout.html" %}
+{% block title %}
+Create event
+{% endblock %}
+
+{% block body %}
+<a href="{{ url_for('index') }}">Home</a>
+<form action="{{ url_for('create_event') }}" method="post">
+  <label>Date: </label><input type="datetime-local" name="date"><br>
+  <label>Who paid?</label><select name="paid_for_by">
+    {% for name in names %}
+    <option value="{{name}}">{{name}}</option>
+    {% endfor %}
+  </select><br>
+  <input type="submit">
+</form>
+{% endblock %}

@@ -1,5 +1,5 @@
 from flask import Flask, render_template, session, url_for, request, redirect, flash, send_file
-from models import User
+from models import User, Event
 import trackerutils
 import boto3
 import io
@@ -10,7 +10,7 @@ app.secret_key = "fdajfdjajfdkjflsdkjakdsjflajdslk"
 @app.route("/", methods=["GET"])
 def index():
     if "username" in session:
-        return render_template("home.html", ten_most_recent_events=[{"id": "tmp", "date": "12-16-2017", "paid_for_by": "andrewhalle", "joke": "This is a test joke."}])
+        return render_template("home.html", events=Event.get_all_events())
     else:
         return redirect(url_for("login"))
 
@@ -47,17 +47,18 @@ def edit_user(username):
         flash("You can't edit someone else's account!", "error")
         return redirect(url_for("index"))
     if request.method == "GET":
-        return render_template("edit_user.html", phone_number=session["phone_number"])
+        curr_user = User.by_username(session["username"])
+        return render_template("edit_user.html", user=curr_user)
     elif request.method == "POST":
         data = request.form
         user = User.by_username(session["username"])
+        user.name = data["name"]
         user.phone_number = data["phone"]
         user.save()
-        session["phone_number"] = user.phone_number
 
         profile_picture = request.files["profile_picture"]
         if profile_picture:
-            # TODO upload to S3
+            # upload to S3
             s3 = boto3.resource("s3", region_name="us-west-1")
             bucket = s3.Bucket("cheesy-stick-tracker-images")
             bucket.put_object(Key="profile_pictures/profile-" + username + ".jpeg", Body=profile_picture)
@@ -85,9 +86,18 @@ def create_user():
         flash("Account created!", "success")
         return redirect(url_for("index"))
 
-@app.route("/events", methods=['POST'])
+@app.route("/events/create", methods=['GET', 'POST'])
 def create_event():
-    return
+    if request.method == "GET":
+        names = User.get_all_names()
+        return render_template("create_event.html", names=names)
+    else:
+        data = request.form
+        date = data["date"]
+        paid_for_by = data["paid_for_by"]
+        event = Event.create(date, paid_for_by)
+        flash("Added cheesy stick even!", "success")
+        return redirect(url_for("index"))
 
 @app.route("/events/<id>/picture", methods=["GET"])
 def get_event_picture(id):

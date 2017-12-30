@@ -24,13 +24,11 @@ Cheesy Stick Tracker
     <tr>
       <th>Date</th>
       <th>Paid for by?</th>
-      <th>Joke</th>
       <th>Picture</th>
     </tr>
-    {% for event in ten_most_recent_events %}
+    {% for event in events %}
       <td>{{event["date"]}}</td>
       <td>{{event["paid_for_by"]}}</td>
-      <td>{{event["joke"]}}</td>
       <td>
 	<img src="{{ url_for('get_event_picture', id=event['id']) }}">
       </td>

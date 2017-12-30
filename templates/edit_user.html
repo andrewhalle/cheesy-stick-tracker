@@ -7,7 +7,8 @@ Account
 <a href="{{ url_for('index') }}">Home</a><br>
 <img src="{{ url_for('get_profile_picture', username=session['username']) }}" class="profile_picture">
 <form action="{{ url_for('edit_user', username=session['username']) }}" method="post" enctype="multipart/form-data">
-  <label>Phone number: </label><input name="phone" type="text" value="{{ phone_number }}"><br>
+  <label>Name: </label><input name="name" type="text" value="{{ user.full_name }}"><br>
+  <label>Phone number: </label><input name="phone" type="text" value="{{ user.phone_number }}"><br>
   <label>Profile picture: </label><input name="profile_picture" type="file"><br>
   <input type="submit" value="Update">
 </form>
